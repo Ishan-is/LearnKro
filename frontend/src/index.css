@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-black;
+  }
+
+  body {
+    @apply bg-dark-950 text-gray-100 font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.01) 0%, transparent 50%);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-900 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-800;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.06];
+  }
+
+  .glass-dark {
+    @apply bg-dark-900/70 backdrop-blur-xl border border-white/[0.04];
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-500 hover:to-primary-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-300 hover:shadow-[0_4px_20px_rgba(99,102,241,0.2)] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-300 border border-white/[0.08] hover:border-white/[0.12] active:scale-[0.98];
+  }
+
+  .btn-outline {
+    @apply border border-primary-500/30 text-primary-300 hover:bg-primary-600/10 hover:border-primary-500 font-semibold px-6 py-2.5 rounded-xl transition-all duration-300 active:scale-[0.98];
+  }
+
+  .card {
+    @apply bg-dark-800 border border-white/[0.04] rounded-2xl overflow-hidden shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:border-primary-500/20 hover:shadow-[0_20px_50px_rgba(99,102,241,0.06)] hover:-translate-y-0.5;
+  }
+
+  .input {
+    @apply bg-white/[0.02] border border-white/[0.08] text-white placeholder-gray-500 rounded-xl px-4 py-2.5 w-full focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/50 transition-all;
+  }
+
+  /* Fix for select/dropdown options */
+  select {
+    @apply bg-dark-800 text-white !important;
+  }
+
+  select option {
+    @apply bg-dark-800 text-white !important;
+  }
+
+  select option:checked {
+    @apply bg-primary-600 text-white !important;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .section-title {
+    @apply font-display font-bold text-white;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-300 via-primary-400 to-accent-400 bg-clip-text text-transparent;
+  }
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 font-medium;
+  }
+
+  .sidebar-link.active {
+    @apply bg-primary-600/10 text-primary-300 border border-primary-500/10;
+  }
+}
+
+/* Video player custom styles */
+.react-player {
+  @apply rounded-xl overflow-hidden;
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+  background: linear-gradient(var(--dark-800), var(--dark-800)) padding-box,
+    linear-gradient(135deg, #6366f1, #10b981) border-box;
+  border: 1px solid transparent;
+}
+
+/* Loading skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #121826 25%, #1c2438 50%, #121826 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #sample-paper-print-area,
+  #sample-paper-print-area * {
+    visibility: visible;
+  }
+
+  #sample-paper-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    border-color: black !important;
+  }
+
+  #sample-paper-print-area .card,
+  #sample-paper-print-area .btn-secondary,
+  #sample-paper-print-area input,
+  #sample-paper-print-area textarea,
+  #sample-paper-print-area label,
+  #sample-paper-print-area div {
+    background: transparent !important;
+    color: black !important;
+    border-color: black !important;
+  }
+}

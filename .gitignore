@@ -1,0 +1,12 @@
+# Ignore all node_modules everywhere
+node_modules/
+**/node_modules/
+
+# Ignore all .env files everywhere
+.env
+**/.env
+
+# Build and System files
+dist/
+**/dist/
+.DS_Store

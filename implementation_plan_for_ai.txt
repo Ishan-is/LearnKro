@@ -1,0 +1,43 @@
+# Enable AI Quiz Generator
+
+The frontend for the AI Quiz Generator is already beautifully designed, but it currently hits a "Route Not Found" error because the backend logic to actually connect to the AI and generate the quiz does not exist. 
+
+This plan outlines the steps to build the `Quiz` model and the backend routes using the Groq AI SDK.
+
+## Proposed Changes
+
+### 1. Create Quiz Database Model
+I will create a MongoDB model to store generated quizzes and their results.
+- **Fields:** `user` (student ID), `topic`, `difficulty`, `timeLimit`, `totalQuestions`, `title`, and an array of `questions`.
+- **Question Schema:** `question`, `options` (array of strings), `correctAnswer` (index), `explanation`, `difficulty`.
+- **Results:** `score`, `percentage`, `passed` (boolean), `isCompleted` (boolean).
+
+#### [NEW] [Quiz.js](file:///c:/Users/ishan/FFmern/project2/learnkroAi/backend/models/Quiz.js)
+
+---
+
+### 2. Implement Groq AI Quiz Generation Logic
+I will create the backend routes to handle the quiz lifecycle and prompt the Groq AI model.
+- **POST `/generate`**: 
+  - Connects to the Groq AI API (`groq-sdk`).
+  - Instructs the AI to generate a quiz based on the user's `topic`, `difficulty`, and `totalQuestions`.
+  - Parses the AI's JSON response and saves the newly generated `Quiz` to MongoDB.
+- **GET `/:quizId`**: Fetches the quiz for the frontend to display, purposefully hiding the `correctAnswer` and `explanation` from the payload so students can't cheat!
+- **POST `/:quizId/submit`**: Grades the student's submitted array of answers against the database, calculates the score/percentage, and returns the full results (including explanations).
+
+#### [NEW] [quiz.routes.js](file:///c:/Users/ishan/FFmern/project2/learnkroAi/backend/routes/quiz.routes.js)
+
+---
+
+### 3. Connect Routes to Server
+I will uncomment the `quiz.routes.js` import in the main server file to activate the endpoints.
+
+#### [MODIFY] [server.js](file:///c:/Users/ishan/FFmern/project2/learnkroAi/backend/server.js)
+
+## Verification Plan
+
+### Manual Verification
+1. I will log in as a student and navigate to the Quiz Generator page.
+2. I will enter a topic (e.g., "React Hooks") and click "Generate Quiz".
+3. I will verify that the groq-sdk correctly generates a valid JSON quiz and saves it to the database.
+4. I will take the quiz and submit it to verify that the auto-grading system correctly calculates the score and displays the AI's explanations.
