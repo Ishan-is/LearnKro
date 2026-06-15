@@ -39,6 +39,8 @@ import InstructorStudentsPage from "./pages/instructor/InstructorStudentsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
+import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/payment/PaymentCancelPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 5 * 60 * 1000 } },
@@ -52,7 +54,7 @@ const ProtectedRoute = ({ children, roles }) => {
 };
 
 function App() {
-  
+
   const { fetchMe } = useAuthStore();
 
   useEffect(() => {
@@ -80,6 +82,8 @@ function App() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:id" element={<CourseDetailPage />} />
           </Route>
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />

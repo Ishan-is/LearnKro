@@ -35,10 +35,65 @@ export default function CourseDetailPage() {
     onError: (err) => toast.error(err.response?.data?.message || "Enrollment failed"),
   });
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (!user) { navigate("/login"); return; }
     if (user.role !== "student") { toast.error("Only students can enroll"); return; }
-    enrollMutation.mutate();
+    // Free course enrollment
+    if (course.isFree || course.price === 0) {
+      enrollMutation.mutate();
+      return;
+    }
+    // Paid course - initiate Razorpay checkout
+    try {
+      toast.loading("Creating order...");
+      const { data } = await api.post(`/payments/create-order/${id}`);
+      toast.dismiss();
+      if (data.mock) {
+        // Mock mode – redirect to success URL
+        window.location.href = data.url;
+      } else {
+        // Load Razorpay script if not already loaded
+        if (!window.Razorpay) {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.async = true;
+          document.body.appendChild(script);
+          await new Promise((resolve) => (script.onload = resolve));
+        }
+        const options = {
+          key: data.key_id,
+          amount: data.amount,
+          currency: data.currency,
+          name: "LearnKro",
+          description: data.courseTitle,
+          order_id: data.order_id,
+          handler: async function (response) {
+            try {
+              await api.post("/payments/verify", {
+                mock: false,
+                orderId: response.razorpay_order_id,
+                payment_id: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                courseId: id,
+              });
+              // Enroll after verification
+              enrollMutation.mutate();
+            } catch (err) {
+              toast.error("Payment verification failed");
+            }
+          },
+          prefill: {
+            email: user.email,
+            contact: user.phone || "",
+          },
+          theme: { color: "#3b82f6" },
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Payment initiation failed");
+    }
   };
 
   const formatDuration = (s) => {
@@ -83,11 +138,10 @@ export default function CourseDetailPage() {
                 <span className="flex items-center gap-1 text-gray-400">
                   <Globe className="w-4 h-4" /> {course.language}
                 </span>
-                <span className={`badge ${
-                  course.level === "Beginner" ? "bg-green-500/20 text-green-400" :
+                <span className={`badge ${course.level === "Beginner" ? "bg-green-500/20 text-green-400" :
                   course.level === "Intermediate" ? "bg-yellow-500/20 text-yellow-400" :
-                  "bg-red-500/20 text-red-400"
-                }`}>{course.level}</span>
+                    "bg-red-500/20 text-red-400"
+                  }`}>{course.level}</span>
               </div>
 
               {course.instructor && (
@@ -125,14 +179,14 @@ export default function CourseDetailPage() {
                   </div>
 
                   {isEnrolled ? (
-                    <button
+                    <button type="button"
                       onClick={() => navigate(`/learn/${id}`)}
                       className="btn-primary w-full flex items-center justify-center gap-2 py-3 mb-4"
                     >
                       <Play className="w-5 h-5" /> Continue Learning
                     </button>
                   ) : (
-                    <button
+                    <button type="button"
                       onClick={handleEnroll}
                       disabled={enrollMutation.isPending}
                       className="btn-primary w-full flex items-center justify-center gap-2 py-3 mb-4"

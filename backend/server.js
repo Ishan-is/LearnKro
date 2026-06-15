@@ -13,6 +13,7 @@ import samplePaperRoutes from "./routes/samplePaper.routes.js";
 import enrollmentRoutes from "./routes/enrollment.routes.js";
 import quizRoutes from "./routes/quiz.routes.js";
 import chatbotRoutes from "./routes/chatbot.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 // import instructorRoutes from "./routes/instructor.routes.js";
 
 dotenv.config();
@@ -58,6 +59,7 @@ app.use("/api/sample-paper", samplePaperRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/payments", paymentRoutes);
 // app.use("/api/instructor", instructorRoutes);
 
 // Test route
