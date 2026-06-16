@@ -17,7 +17,6 @@
     "express-fileupload": "^1.5.1",
     "groq-sdk": "^0.3.3",
     "jsonwebtoken": "^9.0.2",
-    "learnkro": "file:..",
     "mongoose": "^8.4.1",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",

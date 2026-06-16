@@ -24,18 +24,30 @@ const app = express();
 connectDB();
 
 // Middleware
+const allowedOrigins = [
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow localhost or 127.0.0.1 on any port
+      // Allow localhost or 127.0.0.1 on any port, or no origin (like mobile/postman)
       if (
         !origin ||
         origin.startsWith("http://localhost") ||
         origin.startsWith("http://127.0.0.1")
       ) {
+        return callback(null, true);
+      }
+
+      // Check if the origin matches the configured CLIENT_URL (ignoring trailing slash)
+      const cleanOrigin = origin.replace(/\/$/, "");
+      const isAllowed = allowedOrigins.some(o => o.replace(/\/$/, "") === cleanOrigin);
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true,
