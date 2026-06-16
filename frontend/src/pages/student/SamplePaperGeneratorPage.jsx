@@ -6,6 +6,8 @@ import SamplePaperList from "../../components/samplePaper/SamplePaperList";
 import api from "../../utils/api";
 import SamplePaperDisplay from "../../components/samplePaper/SamplePaperDisplay";
 
+
+
 export default function SamplePaperGeneratorPage() {
   const [generatedPaper, setGeneratedPaper] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,29 +56,20 @@ export default function SamplePaperGeneratorPage() {
 
   const handleSave = async () => {
     if (!generatedPaper) {
-      toast.error("No paper to save");
+      toast.error('No paper to download');
       return;
     }
-
-    try {
-      await api.post("/sample-paper", {
-        subject: generatedPaper.subject,
-        title: generatedPaper.title,
-        description: generatedPaper.description,
-        totalMarks: generatedPaper.totalMarks,
-        duration: generatedPaper.duration,
-        difficultyLevel: generatedPaper.difficultyLevel,
-        questions: generatedPaper.questions,
-        sections: generatedPaper.sections,
-        instructions: generatedPaper.instructions,
-      });
-
-      toast.success("Sample paper saved!");
-      refetch();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to save paper");
-    }
+    const data = JSON.stringify(generatedPaper, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedPaper.title.replace(/\s+/g, '_') || 'sample_paper'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Sample paper downloaded');
   };
+
 
   const handlePrint = () => {
     const printWindow = window.open("", "", "height=600,width=800");
@@ -122,12 +115,7 @@ export default function SamplePaperGeneratorPage() {
                     Generated Paper
                   </h2>
                   <div className="flex gap-2">
-                    <button
-                      onClick={handleSave}
-                      className="btn-primary text-sm"
-                    >
-                      Save Paper
-                    </button>
+
                     <button
                       onClick={handlePrint}
                       className="btn-outline text-sm"
