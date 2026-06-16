@@ -102,9 +102,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 LearnKro server running on port ${PORT}`);
-});
+// Only start listener if not running in Vercel serverless environment
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 LearnKro server running on port ${PORT}`);
+  });
+}
 
 export default app;
