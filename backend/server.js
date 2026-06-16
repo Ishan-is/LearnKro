@@ -21,8 +21,7 @@ dotenv.config();
 
 const app = express();
 
-// Connect Database
-connectDB();
+// Database will connect dynamically on request middleware
 
 // Middleware
 const allowedOrigins = [
@@ -62,6 +61,21 @@ app.use(
     limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
   }),
 );
+
+// Database connection middleware (ensures DB is connected on Vercel before handling requests)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection middleware error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Database connection failed.",
+      error: error.message
+    });
+  }
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
