@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import fileUpload from "express-fileupload";
 import { connectDB } from "./config/db.js";
+import mongoose from "mongoose";
 
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
@@ -81,9 +82,17 @@ app.get("/api/test", (req, res) => {
 
 // Health check
 app.get("/api/health", (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting"
+  };
   res.json({
     status: "OK",
     message: "LearnKro API is running",
+    database: states[dbState] || "unknown",
     timestamp: new Date(),
   });
 });
