@@ -82,8 +82,8 @@ function App() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:id" element={<CourseDetailPage />} />
           </Route>
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
