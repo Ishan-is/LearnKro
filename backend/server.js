@@ -93,6 +93,7 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     message: "LearnKro API is running",
     database: states[dbState] || "unknown",
+    mongoUriConfigured: !!process.env.MONGO_URI,
     timestamp: new Date(),
   });
 });
