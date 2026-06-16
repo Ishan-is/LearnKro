@@ -202,8 +202,8 @@ export default function SamplePaperForm({ onSubmit, isLoading }) {
             name="duration"
             value={formData.duration}
             onChange={handleChange}
-            min="30"
-            step="15"
+            min="1"
+            step="1"
             className={`input ${errors.duration ? "border-red-500" : ""}`}
           />
           {errors.duration && (

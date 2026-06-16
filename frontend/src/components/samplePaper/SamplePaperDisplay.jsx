@@ -41,13 +41,19 @@ export default function SamplePaperDisplay({ paper }) {
 
             {/* Questions in this section */}
             <div className="space-y-4">
-              {section.questionIndices &&
-                section.questionIndices.map((qIdx) => {
-                  const q = paper.questions[qIdx];
-                  if (!q) return null;
-
-                  return (
-                    <div key={qIdx} className="mb-4">
+                {(() => {
+                  if (!section.questionIndices) return null;
+                  const displayed = [];
+                  let accumulated = 0;
+                  for (const qIdx of section.questionIndices) {
+                    const q = paper.questions[qIdx - 1];
+                    if (!q) continue;
+                    if (section.weightage && accumulated + q.marks > section.weightage) break;
+                    displayed.push(q);
+                    accumulated += q.marks;
+                  }
+                  return displayed.map((q, i) => (
+                    <div key={i} className="mb-4">
                       <div className="flex gap-2">
                         <span className="font-bold">Q{q.questionNumber}.</span>
                         <div className="flex-1">
@@ -61,14 +67,17 @@ export default function SamplePaperDisplay({ paper }) {
                               ))}
                             </div>
                           )}
-                          <p className="text-xs text-gray-600 mt-2">
-                            [{q.marks} marks]
-                          </p>
+                          <p className="text-xs text-gray-600 mt-2">[{q.marks} marks]</p>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  ));
+                })()}
+                {section.weightage !== undefined && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Attempt questions totaling {section.weightage} marks for this section.
+                  </p>
+                )}
             </div>
           </div>
         ))

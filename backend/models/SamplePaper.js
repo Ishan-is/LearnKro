@@ -78,6 +78,7 @@ const samplePaperSchema = new mongoose.Schema(
         sectionName: String,
         instructions: String,
         questionIndices: [Number],
+        weightage: { type: Number, default: 0 },
       },
     ],
     instructions: String,
