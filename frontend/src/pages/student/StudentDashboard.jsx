@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   Brain,
@@ -14,6 +14,7 @@ import { useAuthStore } from "../../context/authStore";
 
 export default function StudentDashboard() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   const { data: enrollments } = useQuery({
     queryKey: ["my-enrollments"],
@@ -45,6 +46,7 @@ export default function StudentDashboard() {
       value: quizResults?.length || 0,
       icon: Brain,
       color: "from-purple-500 to-purple-700",
+      link: "/dashboard/quiz-generator",
     },
     {
       label: "Avg Progress",
@@ -57,6 +59,7 @@ export default function StudentDashboard() {
       value: enrollments?.filter((e) => e.isCompleted).length || 0,
       icon: Clock,
       color: "from-accent-500 to-orange-700",
+      link: "/dashboard/my-courses?filter=completed",
     },
   ];
 
@@ -76,7 +79,7 @@ export default function StudentDashboard() {
           <div
             key={label}
             className={`card p-5 ${link ? "cursor-pointer hover:border-white/10 transition-colors" : ""}`}
-            onClick={() => link && (window.location.href = link)}
+            onClick={() => link && navigate(link)}
           >
             <div
               className={`w-10 h-10 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center mb-3`}
@@ -223,7 +226,11 @@ export default function StudentDashboard() {
               </h3>
               <div className="space-y-2">
                 {quizResults.slice(0, 3).map((r) => (
-                  <div key={r.quizId} className="glass rounded-xl p-3">
+                  <Link
+                    key={r.quizId}
+                    to={`/quiz/${r.quizId}`}
+                    className="glass rounded-xl p-3 block hover:border-purple-500/30 transition-colors"
+                  >
                     <p className="text-sm text-white truncate">{r.title}</p>
                     <div className="flex items-center justify-between mt-1.5">
                       <span
@@ -235,7 +242,7 @@ export default function StudentDashboard() {
                         {r.totalAttempts} attempts
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

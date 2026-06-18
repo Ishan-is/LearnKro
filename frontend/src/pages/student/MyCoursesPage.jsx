@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { BookOpen, Play, CheckCircle, Clock, Loader2 } from "lucide-react";
 import api from "../../utils/api";
 
 export default function MyCoursesPage() {
+  const [searchParams] = useSearchParams();
+  const filter = searchParams.get("filter");
+  const isCompletedFilter = filter === "completed";
+
   const { data: enrollments, isLoading } = useQuery({
     queryKey: ["my-enrollments"],
     queryFn: () => api.get("/enrollments/my").then((r) => r.data.enrollments),
@@ -15,19 +19,34 @@ export default function MyCoursesPage() {
     </div>
   );
 
+  const filteredEnrollments = isCompletedFilter
+    ? enrollments?.filter((e) => e.isCompleted)
+    : enrollments;
+
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display font-bold text-3xl text-white">My Courses</h1>
-          <p className="text-gray-500 mt-1">{enrollments?.length || 0} courses enrolled</p>
+          <h1 className="font-display font-bold text-3xl text-white">
+            {isCompletedFilter ? "Completed Courses" : "My Courses"}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {filteredEnrollments?.length || 0} {isCompletedFilter ? "courses completed" : "courses enrolled"}
+          </p>
         </div>
-        <Link to="/courses" className="btn-primary text-sm">Browse More</Link>
+        <div className="flex items-center gap-3">
+          {isCompletedFilter && (
+            <Link to="/dashboard/my-courses" className="btn-secondary text-sm">
+              View All Enrolled
+            </Link>
+          )}
+          <Link to="/courses" className="btn-primary text-sm">Browse More</Link>
+        </div>
       </div>
 
-      {enrollments?.length > 0 ? (
+      {filteredEnrollments?.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {enrollments.map((enrollment) => (
+          {filteredEnrollments.map((enrollment) => (
             <div key={enrollment._id} className="card-hover group">
               {/* Thumbnail */}
               <div className="aspect-video relative overflow-hidden bg-dark-900">

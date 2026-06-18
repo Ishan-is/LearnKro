@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Brain,
   BookOpen,
@@ -27,6 +27,11 @@ export default function QuizGeneratorPage() {
       api
         .get("/enrollments/my")
         .then((r) => r.data.enrollments.map((e) => e.course)),
+  });
+
+  const { data: quizHistory } = useQuery({
+    queryKey: ["my-quiz-history"],
+    queryFn: () => api.get("/quiz/my-results").then((r) => r.data.results),
   });
 
   const generateQuizMutation = useMutation({
@@ -209,6 +214,53 @@ export default function QuizGeneratorPage() {
                 </button>
               </div>
             </div>
+
+            {/* Quiz History */}
+            {quizHistory?.length > 0 && (
+              <div className="card p-8 shadow-xl mt-6">
+                <h2 className="font-display font-bold text-2xl text-white mb-2 flex items-center gap-3">
+                  <Clock className="w-6 h-6 text-primary-400" />
+                  Quiz History & Analysis
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">
+                  Review your past quiz attempts and detailed answers
+                </p>
+                <div className="space-y-4">
+                  {quizHistory.map((q) => (
+                    <div
+                      key={q.quizId}
+                      className="glass-dark rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5 hover:border-white/10 transition-colors"
+                    >
+                      <div>
+                        <h4 className="font-semibold text-white text-sm truncate max-w-xs sm:max-w-md">
+                          {q.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {q.totalAttempts} attempt{q.totalAttempts > 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span
+                          className={`text-xs font-bold px-3 py-1.5 rounded-full ${
+                            q.bestScore >= 70
+                              ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                              : "bg-red-500/10 text-red-400 border border-red-500/20"
+                          }`}
+                        >
+                          {q.bestScore}% score
+                        </span>
+                        <Link
+                          to={`/quiz/${q.quizId}`}
+                          className="btn-primary text-xs px-4 py-2 font-semibold"
+                        >
+                          View Analysis
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar */}
