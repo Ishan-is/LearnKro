@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Course from "../models/Course.js";
 import User from "../models/User.js";
 import { protect, authorize } from "../middleware/auth.js";
@@ -114,11 +115,11 @@ router.post(
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    const { category, level, search } = req.query;
+    const { category, level, search, sort, page = 1, limit = 12 } = req.query;
     let query = { isPublished: true };
 
-    if (category) query.category = category;
-    if (level) query.level = level;
+    if (category && category !== "All") query.category = category;
+    if (level && level !== "All") query.level = level;
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -126,15 +127,55 @@ router.get("/", async (req, res) => {
       ];
     }
 
-    const courses = await Course.find(query)
-      .populate("instructor", "name email avatar")
-      .select("-modules")
-      .sort({ createdAt: -1 });
+    const parsedPage = parseInt(page, 10) || 1;
+    const parsedLimit = parseInt(limit, 10) || 12;
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const total = await Course.countDocuments(query);
+    const pages = Math.ceil(total / parsedLimit);
+
+    let courses;
+    if (sort === "-enrolledStudents") {
+      const coursesAgg = await Course.aggregate([
+        { $match: query },
+        { $addFields: { enrolledCount: { $size: { $ifNull: [ "$enrolledStudents", [] ] } } } },
+        { $sort: { enrolledCount: -1, createdAt: -1 } },
+        { $skip: skip },
+        { $limit: parsedLimit },
+        { $project: { modules: 0 } }
+      ]);
+      
+      courses = await Course.populate(coursesAgg, [
+        { path: "instructor", select: "name email avatar" }
+      ]);
+    } else {
+      let sortObj = { createdAt: -1 };
+      if (sort === "price") {
+        sortObj = { price: 1, createdAt: -1 };
+      } else if (sort === "-price") {
+        sortObj = { price: -1, createdAt: -1 };
+      } else if (sort === "-averageRating") {
+        sortObj = { averageRating: -1, createdAt: -1 };
+      } else if (sort === "-createdAt") {
+        sortObj = { createdAt: -1 };
+      }
+
+      courses = await Course.find(query)
+        .populate("instructor", "name email avatar")
+        .select("-modules")
+        .sort(sortObj)
+        .skip(skip)
+        .limit(parsedLimit);
+    }
 
     res.status(200).json({
       success: true,
-      total: courses.length,
       courses,
+      pagination: {
+        total,
+        page: parsedPage,
+        pages,
+      },
     });
   } catch (error) {
     console.error("Error fetching courses:", error);
@@ -144,6 +185,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 
 // @desc    Get courses created by instructor
 // @route   GET /api/courses/instructor/my-courses
@@ -180,7 +222,8 @@ router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate("instructor", "name email avatar bio")
-      .populate("enrolledStudents", "name email avatar");
+      .populate("enrolledStudents", "name email avatar")
+      .populate("ratings.user", "name email avatar");
 
     if (!course) {
       return res.status(404).json({
@@ -590,5 +633,86 @@ router.delete(
     }
   }
 );
+
+// @desc    Add or update course rating/review
+// @route   POST /api/courses/:id/ratings
+// @access  Private
+router.post("/:id/ratings", protect, async (req, res) => {
+  try {
+    const { rating, review } = req.body;
+    const courseId = req.params.id;
+    const userId = req.user.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a rating between 1 and 5",
+      });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Check if user is enrolled (via Course or Enrollment model)
+    const isEnrolledInCourse = course.enrolledStudents.includes(userId);
+    const enrollment = await req.app.get("db") ? null : await mongoose.model("Enrollment").findOne({ user: userId, course: courseId });
+    
+    if (!isEnrolledInCourse && !enrollment) {
+      return res.status(403).json({
+        success: false,
+        message: "Only enrolled students can rate this course",
+      });
+    }
+
+    // Check if already rated
+    const existingRatingIndex = course.ratings.findIndex(
+      (r) => r.user.toString() === userId
+    );
+
+    if (existingRatingIndex > -1) {
+      // Update existing rating
+      course.ratings[existingRatingIndex].rating = rating;
+      course.ratings[existingRatingIndex].review = review || "";
+      course.ratings[existingRatingIndex].createdAt = Date.now();
+    } else {
+      // Add new rating
+      course.ratings.push({
+        user: userId,
+        rating,
+        review: review || "",
+      });
+    }
+
+    // Calculate average rating
+    const totalRatings = course.ratings.length;
+    const sumRatings = course.ratings.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+
+    course.totalRatings = totalRatings;
+    course.averageRating = averageRating;
+    course.rating = averageRating; // set legacy rating field to the same value
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Rating submitted successfully",
+      averageRating,
+      totalRatings,
+      ratings: course.ratings,
+    });
+  } catch (error) {
+    console.error("Error submitting rating:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error",
+    });
+  }
+});
 
 export default router;

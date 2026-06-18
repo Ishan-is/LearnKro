@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -15,7 +15,11 @@ export default function CourseDetailPage() {
   const navigate = useNavigate();
   const [expandedSection, setExpandedSection] = useState(0);
 
-  const { data, isLoading } = useQuery({
+  const [userRating, setUserRating] = useState(0);
+  const [userReview, setUserReview] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const { data, isLoading, refetch: refetchCourse } = useQuery({
     queryKey: ["course", id],
     queryFn: () => api.get(`/courses/${id}`).then((r) => r.data.course),
   });
@@ -25,6 +29,35 @@ export default function CourseDetailPage() {
     queryFn: () => api.get(`/enrollments/check/${id}`).then((r) => r.data),
     enabled: !!user && user.role === "student",
   });
+
+  useEffect(() => {
+    if (data?.ratings && user) {
+      const existing = data.ratings.find(
+        (r) => (r.user?._id || r.user) === user.id
+      );
+      if (existing) {
+        setUserRating(existing.rating);
+        setUserReview(existing.review || "");
+      }
+    }
+  }, [data, user]);
+
+  const rateMutation = useMutation({
+    mutationFn: (ratingData) => api.post(`/courses/${id}/ratings`, ratingData),
+    onSuccess: () => {
+      toast.success("Review updated successfully!");
+      refetchCourse();
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to submit review"),
+  });
+
+  const handleRateCourse = () => {
+    if (!userRating) {
+      toast.error("Please select a rating");
+      return;
+    }
+    rateMutation.mutate({ rating: userRating, review: userReview });
+  };
 
   const enrollMutation = useMutation({
     mutationFn: () => api.post(`/enrollments/${id}`),
@@ -142,6 +175,11 @@ export default function CourseDetailPage() {
                   course.level === "Intermediate" ? "bg-yellow-500/20 text-yellow-400" :
                     "bg-red-500/20 text-red-400"
                   }`}>{course.level}</span>
+                {isEnrolled && (
+                  <span className="badge bg-green-500/20 text-green-400 flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> Enrolled
+                  </span>
+                )}
               </div>
 
               {course.instructor && (
@@ -179,12 +217,18 @@ export default function CourseDetailPage() {
                   </div>
 
                   {isEnrolled ? (
-                    <button type="button"
-                      onClick={() => navigate(`/learn/${id}`)}
-                      className="btn-primary w-full flex items-center justify-center gap-2 py-3 mb-4"
-                    >
-                      <Play className="w-5 h-5" /> Continue Learning
-                    </button>
+                    <>
+                      <div className="flex items-center gap-2 text-green-400 font-semibold mb-4 bg-green-500/10 p-3 rounded-xl justify-center border border-green-500/20 text-sm">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <span>You are enrolled</span>
+                      </div>
+                      <button type="button"
+                        onClick={() => navigate(`/learn/${id}`)}
+                        className="btn-primary w-full flex items-center justify-center gap-2 py-3 mb-4"
+                      >
+                        <Play className="w-5 h-5" /> Continue Learning
+                      </button>
+                    </>
                   ) : (
                     <button type="button"
                       onClick={handleEnroll}
@@ -284,31 +328,87 @@ export default function CourseDetailPage() {
             )}
 
             {/* Reviews */}
-            {course.ratings?.length > 0 && (
+            {((course.ratings && course.ratings.length > 0) || isEnrolled) && (
               <div>
                 <h2 className="font-display font-bold text-2xl text-white mb-4">
-                  Student Reviews ({course.ratings.length})
+                  Student Reviews ({course.ratings?.length || 0})
                 </h2>
-                <div className="space-y-4">
-                  {course.ratings.slice(0, 5).map((r, i) => (
-                    <div key={i} className="glass-dark rounded-2xl p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                          {r.user?.name?.charAt(0) || "?"}
-                        </div>
-                        <div>
-                          <p className="font-medium text-white text-sm">{r.user?.name || "Student"}</p>
-                          <div className="flex">
-                            {[...Array(5)].map((_, j) => (
-                              <Star key={j} className={`w-3.5 h-3.5 ${j < r.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-700"}`} />
-                            ))}
+
+                {isEnrolled && (
+                  <div className="glass-dark rounded-2xl p-6 mb-8 border border-white/5">
+                    <h3 className="font-semibold text-white mb-1">
+                      {course.ratings?.some((r) => (r.user?._id || r.user) === user?.id) ? "Update Your Review" : "Rate this Course"}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-4">
+                      Share your learning experience with other students.
+                    </p>
+
+                    <div className="flex items-center gap-1.5 mb-4">
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setUserRating(num)}
+                          onMouseEnter={() => setHoverRating(num)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="focus:outline-none"
+                        >
+                          <Star
+                            className={`w-6 h-6 transition-colors ${
+                              num <= (hoverRating || userRating)
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-700"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="text-xs text-gray-400 ml-2">
+                        {userRating ? `${userRating} out of 5 stars` : "Select a rating"}
+                      </span>
+                    </div>
+
+                    <textarea
+                      value={userReview}
+                      onChange={(e) => setUserReview(e.target.value)}
+                      placeholder="Write your thoughts and feedback here..."
+                      rows={3}
+                      className="input w-full text-sm mb-4 resize-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleRateCourse}
+                      disabled={rateMutation.isPending || !userRating}
+                      className="btn-primary text-xs px-4 py-2 flex items-center gap-1.5 font-semibold"
+                    >
+                      {rateMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      {course.ratings?.some((r) => (r.user?._id || r.user) === user?.id) ? "Update Review" : "Submit Review"}
+                    </button>
+                  </div>
+                )}
+
+                {course.ratings && course.ratings.length > 0 && (
+                  <div className="space-y-4">
+                    {course.ratings.slice(0, 5).map((r, i) => (
+                      <div key={i} className="glass-dark rounded-2xl p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                            {r.user?.name?.charAt(0) || "?"}
+                          </div>
+                          <div>
+                            <p className="font-medium text-white text-sm">{r.user?.name || "Student"}</p>
+                            <div className="flex">
+                              {[...Array(5)].map((_, j) => (
+                                <Star key={j} className={`w-3.5 h-3.5 ${j < r.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-700"}`} />
+                              ))}
+                            </div>
                           </div>
                         </div>
+                        {r.review && <p className="text-gray-400 text-sm">{r.review}</p>}
                       </div>
-                      {r.review && <p className="text-gray-400 text-sm">{r.review}</p>}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

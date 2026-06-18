@@ -29,6 +29,27 @@ export default function QuizPage() {
   }, [quiz]);
 
   useEffect(() => {
+    if (quiz && quiz.isCompleted) {
+      setSubmitted(true);
+      setResult({
+        score: quiz.score,
+        total: quiz.totalQuestions,
+        percentage: quiz.percentage,
+        passed: quiz.passed,
+        timeTaken: quiz.timeTaken,
+        results: quiz.questions.map((q, index) => ({
+          question: q.question,
+          options: q.options,
+          isCorrect: quiz.userAnswers?.[index] === q.correctAnswer,
+          correctAnswer: q.correctAnswer,
+          yourAnswer: quiz.userAnswers?.[index] ?? -1,
+          explanation: q.explanation,
+        })),
+      });
+    }
+  }, [quiz]);
+
+  useEffect(() => {
     if (timeLeft === null || submitted) return;
     if (timeLeft <= 0) { handleSubmit(); return; }
     const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);

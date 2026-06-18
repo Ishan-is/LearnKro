@@ -207,6 +207,7 @@ router.post("/:quizId/submit", protect, async (req, res) => {
     quiz.passed = passed;
     quiz.timeTaken = timeTaken;
     quiz.isCompleted = true;
+    quiz.userAnswers = answers;
 
     await quiz.save();
 
