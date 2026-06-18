@@ -85,6 +85,7 @@ router.post("/:courseId", protect, async (req, res) => {
       completedLectures: [],
       completionPercentage: 0,
       isCompleted: false,
+      pricePaid: course.price || 0,
     });
 
     // Fallback/Legacy arrays

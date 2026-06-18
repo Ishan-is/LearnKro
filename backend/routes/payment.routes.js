@@ -54,7 +54,11 @@ router.post("/verify", protect, async (req, res) => {
       // Enroll user
       const existing = await Enrollment.findOne({ user: userId, course: tokenCourseId });
       if (existing) return res.json({ success: true, message: "Already enrolled" });
-      await Enrollment.create({ user: userId, course: tokenCourseId });
+      
+      const course = await Course.findById(tokenCourseId);
+      if (!course) return res.status(404).json({ message: "Course not found" });
+
+      await Enrollment.create({ user: userId, course: tokenCourseId, pricePaid: course.price || 0 });
       await Course.findByIdAndUpdate(tokenCourseId, { $push: { enrolledStudents: userId } });
       return res.json({ success: true });
     }
@@ -69,7 +73,11 @@ router.post("/verify", protect, async (req, res) => {
     // Enroll the user to the course.
     const existing = await Enrollment.findOne({ user: userId, course: courseId });
     if (existing) return res.json({ success: true, message: "Already enrolled" });
-    await Enrollment.create({ user: userId, course: courseId });
+    
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    await Enrollment.create({ user: userId, course: courseId, pricePaid: course.price || 0 });
     await Course.findByIdAndUpdate(courseId, { $push: { enrolledStudents: userId } });
     res.json({ success: true });
   } catch (err) {
