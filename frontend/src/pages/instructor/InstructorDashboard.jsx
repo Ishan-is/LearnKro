@@ -14,7 +14,7 @@ export default function InstructorDashboard() {
 
   const { data: courses } = useQuery({
     queryKey: ["instructor-courses"],
-    queryFn: () => api.get("/instructor/courses").then((r) => r.data.courses),
+    queryFn: () => api.get("/courses/instructor/my-courses").then((r) => r.data.courses),
   });
 
   const statCards = [

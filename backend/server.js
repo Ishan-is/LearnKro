@@ -15,7 +15,7 @@ import enrollmentRoutes from "./routes/enrollment.routes.js";
 import quizRoutes from "./routes/quiz.routes.js";
 import chatbotRoutes from "./routes/chatbot.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
-// import instructorRoutes from "./routes/instructor.routes.js";
+import instructorRoutes from "./routes/instructor.routes.js";
 
 dotenv.config();
 
@@ -78,7 +78,7 @@ app.use(async (req, res, next) => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes);
+  app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/sample-paper", samplePaperRoutes);
@@ -87,7 +87,7 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/payments", paymentRoutes);
-// app.use("/api/instructor", instructorRoutes);
+app.use("/api/instructor", instructorRoutes);
 
 // Test route
 app.get("/api/test", (req, res) => {
