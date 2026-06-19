@@ -102,14 +102,14 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
-          <div className="mt-6 p-4 bg-primary-600/10 border border-primary-500/20 rounded-2xl">
+          {/* <div className="mt-6 p-4 bg-primary-600/10 border border-primary-500/20 rounded-2xl">
             <p className="text-xs font-semibold text-primary-400 mb-2">Demo Credentials</p>
             <div className="space-y-1 text-xs text-gray-500">
               <p>Student: student@demo.com / password123</p>
               <p>Instructor: instructor@demo.com / password123</p>
               <p>Admin: admin@demo.com / password123</p>
             </div>
-          </div>
+          </div> */}
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{" "}
