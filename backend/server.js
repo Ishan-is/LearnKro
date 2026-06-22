@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import fileUpload from "express-fileupload";
 import { connectDB } from "./config/db.js";
 import mongoose from "mongoose";
+import os from "os";
 
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
@@ -58,6 +59,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(
   fileUpload({
     useTempFiles: true,
+    tempFileDir: os.tmpdir(),
     limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
   }),
 );
