@@ -87,8 +87,11 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/register" className="btn-primary flex items-center gap-2 text-base px-8 py-3.5 shadow-xl shadow-primary-600/10">
-              Start Learning Free <ArrowRight className="w-5 h-5" />
+            <Link
+              to={user ? (user.role === "admin" ? "/admin" : user.role === "instructor" ? "/instructor" : "/dashboard") : "/register"}
+              className="btn-primary flex items-center gap-2 text-base px-8 py-3.5 shadow-xl shadow-primary-600/10"
+            >
+              {user ? "Go to Dashboard" : "Start Learning Free"} <ArrowRight className="w-5 h-5" />
             </Link>
             <Link to="/courses" className="btn-secondary flex items-center gap-2 text-base px-8 py-3.5">
               <Play className="w-5 h-5 fill-white" /> Browse Courses
