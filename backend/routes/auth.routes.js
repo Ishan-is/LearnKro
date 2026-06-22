@@ -94,7 +94,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Check if user is verified
+    // Check if user is not verified
     if (!user.isVerified) {
       // Generate new OTP and resend
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
