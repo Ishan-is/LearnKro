@@ -127,6 +127,11 @@ router.get("/", async (req, res) => {
       ];
     }
 
+    // Exclude courses from banned instructors
+    const bannedInstructors = await User.find({ isBanned: true }).select("_id");
+    const bannedIds = bannedInstructors.map((u) => u._id);
+    query.instructor = { $nin: bannedIds };
+
     const parsedPage = parseInt(page, 10) || 1;
     const parsedLimit = parseInt(limit, 10) || 12;
     const skip = (parsedPage - 1) * parsedLimit;
@@ -221,11 +226,11 @@ router.get(
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
-      .populate("instructor", "name email avatar bio")
+      .populate("instructor", "name email avatar bio isBanned")
       .populate("enrolledStudents", "name email avatar")
       .populate("ratings.user", "name email avatar");
 
-    if (!course) {
+    if (!course || (course.instructor && course.instructor.isBanned)) {
       return res.status(404).json({
         success: false,
         message: "Course not found",

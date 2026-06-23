@@ -94,6 +94,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been banned. Please contact support.",
+      });
+    }
+
     // Check if user is not verified
     if (!user.isVerified) {
       // Generate new OTP and resend

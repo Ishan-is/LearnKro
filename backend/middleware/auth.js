@@ -31,6 +31,21 @@ export const protect = async (req, res, next) => {
 
     req.user = await User.findById(decoded.id);
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found with this token",
+      });
+    }
+
+    // Check if user is banned
+    if (req.user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been banned. Access revoked.",
+      });
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({
@@ -49,6 +64,15 @@ export const authorize = (...roles) => {
         message: `User role ${req.user.role} is not authorized to access this route`,
       });
     }
+
+    // Check if instructor is approved
+    if (req.user.role === "instructor" && !req.user.instructorApproved) {
+      return res.status(403).json({
+        success: false,
+        message: "Your instructor account is pending approval. You cannot perform this action yet.",
+      });
+    }
+
     next();
   };
 };
