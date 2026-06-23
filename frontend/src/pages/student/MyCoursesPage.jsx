@@ -19,9 +19,9 @@ export default function MyCoursesPage() {
     </div>
   );
 
-  const filteredEnrollments = isCompletedFilter
-    ? enrollments?.filter((e) => e.isCompleted)
-    : enrollments;
+  const filteredEnrollments = enrollments
+    ?.filter((e) => e.course !== null && e.course !== undefined)
+    .filter((e) => !isCompletedFilter || e.isCompleted);
 
   return (
     <div className="page-container">

@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Course from "../models/Course.js";
 import User from "../models/User.js";
+import Enrollment from "../models/Enrollment.js";
 import { protect, authorize } from "../middleware/auth.js";
 import {
   uploadToCloudinary,
@@ -377,6 +378,9 @@ router.delete(
       }
 
       await Course.findByIdAndDelete(req.params.id);
+
+      // Delete all enrollments associated with this course
+      await Enrollment.deleteMany({ course: req.params.id });
 
       // Remove course from instructor's createdCourses
       await User.findByIdAndUpdate(req.user.id, {

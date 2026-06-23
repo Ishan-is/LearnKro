@@ -26,7 +26,11 @@ export default function QuizGeneratorPage() {
     queryFn: () =>
       api
         .get("/enrollments/my")
-        .then((r) => r.data.enrollments.map((e) => e.course)),
+        .then((r) =>
+          r.data.enrollments
+            .map((e) => e.course)
+            .filter((c) => c !== null && c !== undefined)
+        ),
   });
 
   const { data: quizHistory } = useQuery({

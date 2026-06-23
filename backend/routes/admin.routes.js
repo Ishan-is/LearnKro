@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Course from "../models/Course.js";
 import Enrollment from "../models/Enrollment.js";
 import { protect, authorize } from "../middleware/auth.js";
+import { deleteFromCloudinary } from "../config/cloudinary.js";
 
 const router = express.Router();
 
@@ -335,6 +336,43 @@ router.delete("/users/:id", protect, authorize("admin"), async (req, res) => {
         success: false,
         message: "User not found",
       });
+    }
+
+    // Cascade cleanup actions depending on the user's role
+    if (user.role === "instructor") {
+      const courses = await Course.find({ instructor: user._id });
+      for (const course of courses) {
+        if (course.enrolledStudents && course.enrolledStudents.length > 0) {
+          // Unpublish course so existing students retain access, but no new student can enroll
+          course.isPublished = false;
+          course.status = "draft";
+          await course.save();
+        } else {
+          // Delete course and clean up thumbnail
+          if (course.thumbnail) {
+            try {
+              const publicId = course.thumbnail
+                .split("/")
+                .slice(-2)
+                .join("/")
+                .split(".")[0];
+              await deleteFromCloudinary(publicId, "image");
+            } catch (err) {
+              console.error(`Failed to delete thumbnail for course ${course._id}:`, err);
+            }
+          }
+          await Course.findByIdAndDelete(course._id);
+          await Enrollment.deleteMany({ course: course._id });
+        }
+      }
+    } else if (user.role === "student") {
+      // Delete all student enrollments
+      await Enrollment.deleteMany({ user: user._id });
+      // Remove from course enrolledStudents arrays
+      await Course.updateMany(
+        { enrolledStudents: user._id },
+        { $pull: { enrolledStudents: user._id } }
+      );
     }
 
     res.status(200).json({
